@@ -28,16 +28,17 @@ function App() {
 
     try {
       // 1. Fetch weather data from NASA via proxy
-      const response = await axios.get(`http://localhost:3001/api/nasa-proxy`, {
-        params: {
-          parameters: formData.parameters,
-          longitude: formData.lon,
-          latitude: formData.lat,
-          start: formData.start,
-          end: formData.end,
-          format: 'JSON'
-        }
-      });
+     const response = await axios.get(`/api/nasa-proxy`, {
+  params: {
+    parameters: formData.parameters,
+    longitude: formData.lon,
+    latitude: formData.lat,
+    start: formData.start,
+    end: formData.end,
+    format: 'JSON'
+  }
+});
+
 
       if (response.data.properties && response.data.properties.parameter) {
         const paramData = response.data.properties.parameter;

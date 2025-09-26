@@ -9,20 +9,21 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve React build folder
-app.use(express.static(path.join(__dirname, 'client/build')));
+// Serve React build folder from root
+app.use(express.static(path.join(__dirname, 'build')));
 
-// Helper function for parameter names
+// Helper for parameter display names
 const getParameterDisplayName = (param) => {
   const names = {
-    "T2M": "Temperature",
-    "PRECTOTCORR": "Precipitation",
-    "WS2M": "Wind Speed",
-    "RH2M": "Humidity",
-    "SNODP": "Snow Depth"
+    T2M: "Temperature",
+    PRECTOTCORR: "Precipitation",
+    WS2M: "Wind Speed",
+    RH2M: "Humidity",
+    SNODP: "Snow Depth",
   };
   return names[param] || param;
 };
@@ -47,7 +48,7 @@ app.post('/api/probabilities', async (req, res) => {
     const probabilities = {};
 
     for (const param of parameters) {
-      const values = data.map(row => row[param]).filter(v => v !== null);
+      const values = data.map((row) => row[param]).filter((v) => v !== null);
       if (values.length === 0) continue;
 
       const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -65,13 +66,13 @@ app.post('/api/probabilities', async (req, res) => {
       `;
 
       const result = await model.generateContent(prompt);
-      const response = await result.response.text();
-      const probs = response.match(/extreme:(\d+),above_average:(\d+),anomaly:(\d+)/);
+      const responseText = await result.response.text();
+      const probs = responseText.match(/extreme:(\d+),above_average:(\d+),anomaly:(\d+)/);
 
       probabilities[param] = {
         extreme_event: probs ? parseInt(probs[1]) : Math.floor(Math.random() * 100),
         above_average: probs ? parseInt(probs[2]) : Math.floor(Math.random() * 100),
-        anomaly: probs ? parseInt(probs[3]) : Math.floor(Math.random() * 100)
+        anomaly: probs ? parseInt(probs[3]) : Math.floor(Math.random() * 100),
       };
     }
 
@@ -94,8 +95,8 @@ app.post('/api/weather-summary', async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     let conditions = "";
 
-    parameters.forEach(param => {
-      const values = data.map(row => row[param]).filter(v => v !== null);
+    parameters.forEach((param) => {
+      const values = data.map((row) => row[param]).filter((v) => v !== null);
       if (values.length > 0) {
         const mean = values.reduce((a, b) => a + b, 0) / values.length;
         const max = Math.max(...values);
@@ -107,7 +108,6 @@ app.post('/api/weather-summary', async (req, res) => {
     });
 
     const currentMonth = new Date().toLocaleDateString('en-US', { month: 'long' });
-
     const prompt = `
       Write a conversational weather summary for someone at location ${location.lat}°N, ${location.lon}°E in ${currentMonth}.
       Current conditions:
@@ -141,7 +141,7 @@ app.get('/api/nasa-proxy', async (req, res) => {
 
 // Catch-all to serve React frontend
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 // Start server
